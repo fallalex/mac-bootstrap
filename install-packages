@@ -1,0 +1,120 @@
+#!/usr/bin/env zsh
+
+# Run the command `brew tap` to see all taps in use
+# Running the following will list packages available from a tap
+#     brew tap-info vmware/tvs --json | jq -r '.[]|(.formula_names[],.cask_tokens[])'
+taps=(
+    homebrew/cask-fonts
+    hudochenkov/sshpass
+    showwin/speedtest
+)
+
+# Running the command `brew leaves --installed-on-request`
+# will show the top-level packages you intentionally installed
+packages=(
+
+# Primary tools
+    zsh
+    neovim
+    tmux
+    ripgrep
+    fd
+    sd
+    exa
+    dua-cli
+    zoxide
+    starship
+    coreutils
+    findutils
+    atool
+    jq
+    gojq
+    yq
+    less
+    wget
+    hudochenkov/sshpass/sshpass
+    procs
+    gnu-tar
+    curl
+    bat
+    bat-extras
+    bash
+    fzf
+
+# GIT
+    git
+    git-lfs
+    gh
+    glab
+    git-delta
+    difftastic
+
+# Password management
+    gpg
+    pass
+    bitwarden-cli
+    pwgen
+
+# Tools
+    hurl
+    gnutls
+    pandoc
+    opendetex
+    massren
+    lftp
+    hyperfine
+    gnu-typist
+    gawk
+    fetch
+    doggo
+    showwin/speedtest/speedtest
+    choose-rust
+    ffmpeg
+    just
+    bottom
+    watchexec
+    dust
+    htmlq
+
+# Software Engineering
+    jenv
+    rbenv
+    pyenv
+    pyenv-virtualenv
+    go
+    kotlin
+    enchant
+    hugo
+    tokei
+
+)
+
+# Running the command `brew list --cask -1`
+# will show the casks installed
+casks=(
+    intellij-idea
+    intellij-idea-ce
+    insomnia
+    font-fira-code
+    firefox
+    google-chrome
+    zoom
+    slack
+    vlc
+    mactex
+    calibre
+    qbittorrent
+    microsoft-remote-desktop
+    alacritty
+    neovide
+    todoist
+    maccy
+)
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+/usr/local/bin/brew tap ${taps[*]}
+/usr/local/bin/brew install ${packages[*]}
+/usr/local/bin/brew install --cask ${casks[*]}
+
+# TODO: use fetch to install things with releases but not available in homebrew
+# https://github.com/yarrow/zet/releases

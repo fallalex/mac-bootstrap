@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+import sys
+import base64
+import hashlib
+from json import loads
+from subprocess import check_output
+import pathlib
+
+# TODO get internal keyboard id
+# system_profiler -json SPSPIDataType
+# jq '..|objects|select(._name=="Apple Internal Keyboard / Trackpad")|with_entries(select(.key|test(".*product_id")))|to_entries[]|.value'
+
+
+def mode_print(value, mode, human_readable):
+    output = ''
+    if human_readable:
+        output += mode + ': '
+    output += value
+    print(output)
+
+
+hash_mode = serial_mode = description_mode = False
+if len(sys.argv) != 2:
+    hash_mode = serial_mode = description_mode = True
+    human_readable = True
+else:
+    human_readable = False
+    mode = sys.argv[-1]
+    hash_mode = (mode == 'h')
+    serial_mode = (mode == 's')
+    description_mode = (mode == 'd')
+    # print( hash_mode , serial_mode , description_mode)
+
+if not (hash_mode or serial_mode or description_mode):
+    sys.exit("Excepts at most one argument. Possible values: 'h', 's', 'd'")
+
+system_profiler = loads(check_output(('system_profiler', '-json', 'SPHardwareDataType')).decode('utf8'))
+serial = system_profiler['SPHardwareDataType'][0]['serial_number']
+
+if serial_mode:
+    mode_print(serial, 'Serial', human_readable)
+
+if description_mode:
+    plist_path = pathlib.PosixPath('~/Library/Preferences/com.apple.SystemProfiler.plist').expanduser()
+    plist = loads(check_output(('plutil', '-extract', 'CPU Names', 'json', '-o', '-', plist_path)).decode('utf8'))
+    # TODO: Lookup the correct value using the key ending in '-en-US_US'
+    marketing_name = [x for x in plist.values()][0]
+    mode_print(marketing_name, 'Description', human_readable)
+
+if hash_mode:
+    hasher = hashlib.sha1(serial.encode('utf8'))
+    truncated_hash = base64.b64encode(hasher.digest()).decode('utf8')[:12]
+    mode_print(truncated_hash, 'Hash', human_readable)
+

@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+SERIAL_HASH=$(/tmp/mac_serial_util.py h)
+MODEL_DESCRIPTION=$(/tmp/mac_serial_util.py d)
+COMMENT="$(date "+%F") $SERIAL_HASH $USER $MODEL_DESCRIPTION"
+echo $COMMENT
+
+KEY_TYPE=rsa
+KEY_PATH=$HOME/.ssh/id_$KEY_TYPE
+ssh-keygen -a 100 -t $KEY_TYPE -b 4096 -q -C "$COMMENT" -f $KEY_PATH -N ''
+
+KEY_TYPE=ed25519
+KEY_PATH=$HOME/.ssh/id_$KEY_TYPE
+ssh-keygen -a 100 -t $KEY_TYPE -q -C "$COMMENT" -f $KEY_PATH -N ''
+KEY_PATH=$HOME/.ssh/id_${KEY_TYPE}_personal
+ssh-keygen -a 100 -t $KEY_TYPE -q -C "$COMMENT personal" -f $KEY_PATH
+

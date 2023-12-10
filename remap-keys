@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# I swap ESC and CAPSLOCK then make RIGHT-CMD LEFT_Ctl on the built in keyboard only
+# https://github.com/amarsyla/hidutil-key-remapping-generator
+# https://stackoverflow.com/questions/54392510/how-to-assign-a-key-remapping-to-specific-device-using-hidutil
+
+SERVICE_NAME=local.KeyRemapping
+PLIST_NAME="$SERVICE_NAME.plist"
+PLIST_PATH="$HOME/Library/LaunchAgents/$PLIST_NAME"
+
+# build the json plist and include the escaped json mentioned below
+{
+  "Label": "local.KeyRemapping",
+  "ProgramArguments": [
+    "/usr/bin/hidutil",
+    "property",
+    "--matching",
+    "{\"ProductID\":}",
+    "--set",
+    "{\"UserKeyMapping\":[\n            {\n              \"HIDKeyboardModifierMappingSrc\": 0x700000039,\n              \"HIDKeyboardModifierMappingDst\": 0x700000029\n            },\n            {\n              \"HIDKeyboardModifierMappingSrc\": 0x7000000E7,\n              \"HIDKeyboardModifierMappingDst\": 0x7000000E0\n            },\n            {\n              \"HIDKeyboardModifierMappingSrc\": 0x700000029,\n              \"HIDKeyboardModifierMappingDst\": 0x700000039\n            }\n        ]}"
+  ],
+  "KeepAlive": true
+}
+
+# for hidutil --matching
+# set the value using the keyboard id obtained by 'system-profiler-utility'
+{"ProductID":}
+
+# for hidutil --set
+{"UserKeyMapping":[
+    {
+      "HIDKeyboardModifierMappingSrc": 0x700000039,
+      "HIDKeyboardModifierMappingDst": 0x700000029
+    },
+    {
+      "HIDKeyboardModifierMappingSrc": 0x7000000E7,
+      "HIDKeyboardModifierMappingDst": 0x7000000E0
+    },
+    {
+      "HIDKeyboardModifierMappingSrc": 0x700000029,
+      "HIDKeyboardModifierMappingDst": 0x700000039
+    }
+]}
+
+# https://github.com/buildkite/docs/issues/353
+# It seems like this might not quite work headless but should load on reboot
+echo "DISABLE"
+launchctl disable gui/$UID/$SERVICE_NAME
+echo "BOOTOUT"
+launchctl bootout gui/$UID "$PLIST_PATH"
+echo "ENABLE"
+launchctl enable gui/$UID/$SERVICE_NAME
+echo "BOOTSTRAP"
+launchctl bootstrap gui/$UID "$PLIST_PATH"
+echo "KICKSTART"
+launchctl kickstart gui/$UID/$SERVICE_NAME
+sleep 5
+launchctl print gui/$UID/$SERVICE_NAME | rg "(runs|last exit code)"
+
