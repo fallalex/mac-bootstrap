@@ -5,6 +5,9 @@ import hashlib
 from json import loads
 from subprocess import check_output
 import pathlib
+import plistlib
+
+# TODO: switch to plistlib and 'system_profiler -xml' from json
 
 
 def summary(system_info):
@@ -30,6 +33,18 @@ def get_keyboard_id():
     return ids[0]
 
 def get_marketing_name():
+    """
+    Once there was an Apple API to request the marketing name for based on the last digits of the serial number.
+    The following link was describes how to get this information without any external dependencies.
+    https://community.jamf.com/t5/jamf-pro/collect-year-from-mac-marketing-model-name/td-p/250495
+
+    Check 'system_profiler SPHardwareDataType' for two possible entries and based on which is available choose how to look up the marketing name
+      Chip: Apple M3
+      Processor Name: Dual-Core Intel Core i5
+    
+    If Chip is Apple silicon get marketing name from following command
+        /usr/sbin/ioreg -ark product-name
+    """
     plist_path = pathlib.PosixPath('~/Library/Preferences/com.apple.SystemProfiler.plist').expanduser()
     plist = loads(check_output(('plutil', '-extract', 'CPU Names', 'json', '-o', '-', plist_path)).decode('utf8'))
     values = [v for k,v in plist.items() if k.endswith('-en-US_US')]
