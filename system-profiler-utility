@@ -2,12 +2,9 @@
 import sys
 import base64
 import hashlib
-from json import loads
 from subprocess import check_output
 import pathlib
 import plistlib
-
-# TODO: switch to plistlib and 'system_profiler -xml' from json
 
 
 def summary(system_info):
@@ -16,14 +13,15 @@ def summary(system_info):
     print('\n'.join(lines))
 
 def get_system_profiler_data(data_type):
-    system_profiler = loads(check_output(('system_profiler', '-json', data_type)).decode('utf8'))
-    data = system_profiler[data_type]
-    assert isinstance(data, list)
-    assert len(data) == 1
-    return data[0]
-
-def get_serial_number():
-    return get_system_profiler_data('SPHardwareDataType')['serial_number']
+    output = check_output(('system_profiler', '-xml', data_type))
+    plist = plistlib.loads(output, fmt=plistlib.FMT_XML)
+    assert isinstance(plist, list)
+    assert len(plist) == 1
+    assert '_items' in plist[0]
+    items = plist[0]['_items']
+    assert isinstance(items, list)
+    assert len(items) == 1
+    return items[0]
 
 def get_keyboard_id():
     data = get_system_profiler_data('SPSPIDataType')
@@ -32,7 +30,11 @@ def get_keyboard_id():
     assert len(ids) == 1
     return ids[0]
 
-def get_marketing_name():
+def hash_serial_number(serial_number):
+    hasher = hashlib.sha1(serial_number.encode('utf8'))
+    return base64.b64encode(hasher.digest()).decode('utf8')[:12]
+
+def get_marketing_name(sphardware):
     """
     Once there was an Apple API to request the marketing name for based on the last digits of the serial number.
     The following link was describes how to get this information without any external dependencies.
@@ -41,27 +43,34 @@ def get_marketing_name():
     Check 'system_profiler SPHardwareDataType' for two possible entries and based on which is available choose how to look up the marketing name
       Chip: Apple M3
       Processor Name: Dual-Core Intel Core i5
-    
-    If Chip is Apple silicon get marketing name from following command
-        /usr/sbin/ioreg -ark product-name
     """
-    plist_path = pathlib.PosixPath('~/Library/Preferences/com.apple.SystemProfiler.plist').expanduser()
-    plist = loads(check_output(('plutil', '-extract', 'CPU Names', 'json', '-o', '-', plist_path)).decode('utf8'))
-    values = [v for k,v in plist.items() if k.endswith('-en-US_US')]
-    assert len(values) == 1
-    return values[0]
+    if 'cpu_type' in sphardware and 'Intel' in sphardware['cpu_type']:
+        plist_path = pathlib.PosixPath('~/Library/Preferences/com.apple.SystemProfiler.plist').expanduser()
+        output = check_output(('plutil', '-extract', 'CPU Names', 'xml1', '-o', '-', plist_path))
+        plist = plistlib.loads(output, fmt=plistlib.FMT_XML)
+        values = [v for k,v in plist.items() if k.endswith('-en-US_US')]
+        assert len(values) == 1
+        return values[0]
+    elif 'chip_type' in sphardware and 'Apple' in sphardware['chip_type']:
+        output = check_output(('/usr/sbin/ioreg', '-ark', 'product-name'))
+        plist = plistlib.loads(output, fmt=plistlib.FMT_XML)
+        assert isinstance(plist, list)
+        assert len(plist) == 1
+        assert 'product-name' in plist[0]
+        name = plist[0]['product-name']
+        return name.decode('utf8').rstrip('\x00')
+    else:
+        sys.exit("Could not determine marketing name")
 
-def hash_serial_number(serial_number):
-    hasher = hashlib.sha1(serial_number.encode('utf8'))
-    return base64.b64encode(hasher.digest()).decode('utf8')[:12]
+sphardware = get_system_profiler_data('SPHardwareDataType')
+serial = sphardware['serial_number']
 
 
 possible_arguments = ('h', 's', 'd', 'k')
 if len(sys.argv) == 1:
-    serial = get_serial_number()
     system_info = (
         ('Serial', serial),
-        ('Description', get_marketing_name()),
+        ('Description', get_marketing_name(sphardware)),
         ('Hash', hash_serial_number(serial)),
         ('Keyboard Id', get_keyboard_id()),
     )
@@ -69,11 +78,11 @@ if len(sys.argv) == 1:
 elif len(sys.argv) == 2:
     mode = sys.argv[-1]
     if mode == 'h':
-        print(hash_serial_number(get_serial_number()))
+        print(hash_serial_number(serial))
     elif mode == 's':
-        print(get_serial_number())
+        print(serial)
     elif mode == 'd':
-        print(get_marketing_name())
+        print(get_marketing_name(sphardware))
     elif mode == 'k':
         print(get_keyboard_id())
     else:
