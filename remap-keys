@@ -1,58 +1,75 @@
 #!/usr/bin/env python3
-# I swap ESC and CAPSLOCK then make RIGHT-CMD LEFT_Ctl on the built in keyboard only
+import plistlib
+import pathlib
+import subprocess
+import json
+import os
 # https://github.com/amarsyla/hidutil-key-remapping-generator
 # https://stackoverflow.com/questions/54392510/how-to-assign-a-key-remapping-to-specific-device-using-hidutil
 
-SERVICE_NAME=local.KeyRemapping
-PLIST_NAME="$SERVICE_NAME.plist"
-PLIST_PATH="$HOME/Library/LaunchAgents/$PLIST_NAME"
+system_profiler_utility = str(pathlib.PosixPath(__file__).with_name('system-profiler-utility'))
+KEYBOARD_ID = subprocess.check_output((system_profiler_utility, 'k')).decode('utf8').rstrip()
+
+SERVICE_NAME = "local.KeyRemapping"
+PLIST_NAME = f"{SERVICE_NAME}.plist"
+PLIST_PATH = str(pathlib.PosixPath(f'~/Library/LaunchAgents/{PLIST_NAME}').expanduser())
+
+UID = os.getuid()
+gui = f"gui/{UID}"
+gui_service = f"{gui}/{SERVICE_NAME}"
+
+matching_json = json.dumps({"ProductID": KEYBOARD_ID})
+
+set_json = json.dumps({"UserKeyMapping": [
+  {  # caplocks to escape
+    "HIDKeyboardModifierMappingSrc": 0x700000039,
+    "HIDKeyboardModifierMappingDst": 0x700000029
+  },
+  {  # right command to left control
+    "HIDKeyboardModifierMappingSrc": 0x7000000E7,
+    "HIDKeyboardModifierMappingDst": 0x7000000E0
+  },
+  {  # escape to caplocks
+    "HIDKeyboardModifierMappingSrc": 0x700000029,
+    "HIDKeyboardModifierMappingDst": 0x700000039
+  }]}
+)
 
 # build the json plist and include the escaped json mentioned below
-{
-  "Label": "local.KeyRemapping",
+plist_content = {
+  "Label": SERVICE_NAME,
   "ProgramArguments": [
     "/usr/bin/hidutil",
     "property",
     "--matching",
-    "{\"ProductID\":}",
+    matching_json,
     "--set",
-    "{\"UserKeyMapping\":[\n            {\n              \"HIDKeyboardModifierMappingSrc\": 0x700000039,\n              \"HIDKeyboardModifierMappingDst\": 0x700000029\n            },\n            {\n              \"HIDKeyboardModifierMappingSrc\": 0x7000000E7,\n              \"HIDKeyboardModifierMappingDst\": 0x7000000E0\n            },\n            {\n              \"HIDKeyboardModifierMappingSrc\": 0x700000029,\n              \"HIDKeyboardModifierMappingDst\": 0x700000039\n            }\n        ]}"
+    set_json
   ],
-  "KeepAlive": true
+  "KeepAlive": True
 }
 
-# for hidutil --matching
-# set the value using the keyboard id obtained by 'system-profiler-utility'
-{"ProductID":}
-
-# for hidutil --set
-{"UserKeyMapping":[
-    {
-      "HIDKeyboardModifierMappingSrc": 0x700000039,
-      "HIDKeyboardModifierMappingDst": 0x700000029
-    },
-    {
-      "HIDKeyboardModifierMappingSrc": 0x7000000E7,
-      "HIDKeyboardModifierMappingDst": 0x7000000E0
-    },
-    {
-      "HIDKeyboardModifierMappingSrc": 0x700000029,
-      "HIDKeyboardModifierMappingDst": 0x700000039
-    }
-]}
+print(f'Writing the following to {PLIST_PATH}')
+plist = plistlib.dumps(plist_content)
+print(plist.decode('utf8'))
+with open(PLIST_PATH, 'wb') as f:
+  f.write(plist)
 
 # https://github.com/buildkite/docs/issues/353
 # It seems like this might not quite work headless but should load on reboot
-echo "DISABLE"
-launchctl disable gui/$UID/$SERVICE_NAME
-echo "BOOTOUT"
-launchctl bootout gui/$UID "$PLIST_PATH"
-echo "ENABLE"
-launchctl enable gui/$UID/$SERVICE_NAME
-echo "BOOTSTRAP"
-launchctl bootstrap gui/$UID "$PLIST_PATH"
-echo "KICKSTART"
-launchctl kickstart gui/$UID/$SERVICE_NAME
-sleep 5
-launchctl print gui/$UID/$SERVICE_NAME | rg "(runs|last exit code)"
+print("DISABLE")
+subprocess.run(("launchctl", "disable", gui_service))
+print("BOOTOUT")
+subprocess.run(("launchctl", "bootout", gui, PLIST_PATH))
+print("ENABLE")
+subprocess.run(("launchctl", "enable", gui_service))
+print("BOOTSTRAP")
+subprocess.run(("launchctl", "bootstrap", gui, PLIST_PATH))
+print("KICKSTART")
+subprocess.run(("launchctl", "kickstart", gui_service))
+subprocess.run(("sleep", "5"))
+process = subprocess.Popen(("launchctl", "print", gui_service), stdout=subprocess.PIPE)
+output = subprocess.check_output(('rg', "(runs|last exit code)"), stdin=process.stdout)
+process.wait()
 
+print(output.decode('utf8'))
