@@ -22,16 +22,16 @@ matching_json = json.dumps({"ProductID": KEYBOARD_ID})
 
 set_json = json.dumps({"UserKeyMapping": [
   {  # caplocks to escape
-    "HIDKeyboardModifierMappingSrc": 0x700000039,
-    "HIDKeyboardModifierMappingDst": 0x700000029
+    "HIDKeyboardModifierMappingSrc": "0x700000039",
+    "HIDKeyboardModifierMappingDst": "0x700000029"
   },
   {  # right command to left control
-    "HIDKeyboardModifierMappingSrc": 0x7000000E7,
-    "HIDKeyboardModifierMappingDst": 0x7000000E0
+    "HIDKeyboardModifierMappingSrc": "0x7000000E7",
+    "HIDKeyboardModifierMappingDst": "0x7000000E0"
   },
   {  # escape to caplocks
-    "HIDKeyboardModifierMappingSrc": 0x700000029,
-    "HIDKeyboardModifierMappingDst": 0x700000039
+    "HIDKeyboardModifierMappingSrc": "0x700000029",
+    "HIDKeyboardModifierMappingDst": "0x700000039"
   }]}
 )
 
