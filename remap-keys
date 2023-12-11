@@ -69,7 +69,7 @@ print("KICKSTART")
 subprocess.run(("launchctl", "kickstart", gui_service))
 subprocess.run(("sleep", "5"))
 process = subprocess.Popen(("launchctl", "print", gui_service), stdout=subprocess.PIPE)
-output = subprocess.check_output(('rg', "(runs|last exit code)"), stdin=process.stdout)
+output = subprocess.check_output(('grep', '-E', "(runs|last exit code)"), stdin=process.stdout)
 process.wait()
 
 print(output.decode('utf8'))
