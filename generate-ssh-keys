@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
-SERIAL_HASH=$(/tmp/mac_serial_util.py h)
-MODEL_DESCRIPTION=$(/tmp/mac_serial_util.py d)
+SERIAL_HASH=$(./system-profiler-utility h)
+MODEL_DESCRIPTION=$(./system-profiler-utility d)
 COMMENT="$(date "+%F") $SERIAL_HASH $USER $MODEL_DESCRIPTION"
 echo $COMMENT
 

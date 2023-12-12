@@ -23,10 +23,11 @@ def get_system_profiler_data(data_type):
     assert len(items) == 1
     return items[0]
 
-def get_keyboard_id():
+# Not sure why but using the product_id did not work on my M3 Mac
+def get_keyboard_location_id():
     data = get_system_profiler_data('SPSPIDataType')
     assert data.get('_name') == "Apple Internal Keyboard / Trackpad"
-    ids = [v for k,v in data.items() if k.endswith("_product_id")]
+    ids = [v for k,v in data.items() if k.endswith("_location_id")]
     assert len(ids) == 1
     return ids[0]
 
@@ -72,7 +73,7 @@ if len(sys.argv) == 1:
         ('Serial', serial),
         ('Description', get_marketing_name(sphardware)),
         ('Hash', hash_serial_number(serial)),
-        ('Keyboard Id', get_keyboard_id()),
+        ('Keyboard Location Id', get_keyboard_location_id()),
     )
     summary(system_info)
 elif len(sys.argv) == 2:
@@ -84,7 +85,7 @@ elif len(sys.argv) == 2:
     elif mode == 'd':
         print(get_marketing_name(sphardware))
     elif mode == 'k':
-        print(get_keyboard_id())
+        print(get_keyboard_location_id())
     else:
         sys.exit("Excepts at most one argument with possible values: {}".format(', '.join(possible_arguments)))
 else:

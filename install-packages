@@ -1,26 +1,19 @@
 #!/usr/bin/env zsh
 
-# Run the command `brew tap` to see all taps in use
-# Running the following will list packages available from a tap
-#     brew tap-info vmware/tvs --json | jq -r '.[]|(.formula_names[],.cask_tokens[])'
-taps=(
-    homebrew/cask-fonts
-    hudochenkov/sshpass
-    showwin/speedtest
-)
 
 # Running the command `brew leaves --installed-on-request`
 # will show the top-level packages you intentionally installed
 packages=(
 
-# Primary tools
+# Tools
     zsh
     neovim
     tmux
     ripgrep
     fd
     sd
-    exa
+    eza
+    lsd
     dua-cli
     zoxide
     starship
@@ -32,7 +25,6 @@ packages=(
     yq
     less
     wget
-    hudochenkov/sshpass/sshpass
     procs
     gnu-tar
     curl
@@ -40,27 +32,15 @@ packages=(
     bat-extras
     bash
     fzf
-
-# GIT
-    git
-    git-lfs
-    gh
-    glab
-    git-delta
-    difftastic
-
-# Password management
-    gpg
-    pass
-    bitwarden-cli
-    pwgen
-
-# Tools
+    zet
+    just
+    aichat
+    typos-cli
+    procs
     hurl
     gnutls
     pandoc
     opendetex
-    massren
     lftp
     hyperfine
     gnu-typist
@@ -75,6 +55,21 @@ packages=(
     watchexec
     dust
     htmlq
+    atuin
+
+# Password management
+    gpg
+    pass
+    bitwarden-cli
+    pwgen
+
+# GIT
+    git
+    git-lfs
+    gh
+    glab
+    git-delta
+    difftastic
 
 # Software Engineering
     jenv
@@ -86,23 +81,20 @@ packages=(
     enchant
     hugo
     tokei
+    ruff
 
 )
 
 # Running the command `brew list --cask -1`
 # will show the casks installed
 casks=(
-    intellij-idea
     intellij-idea-ce
-    insomnia
     font-fira-code
     firefox
     google-chrome
     zoom
     slack
-    vlc
     mactex
-    calibre
     qbittorrent
     microsoft-remote-desktop
     alacritty
@@ -111,10 +103,14 @@ casks=(
     maccy
 )
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-/usr/local/bin/brew tap ${taps[*]}
-/usr/local/bin/brew install ${packages[*]}
-/usr/local/bin/brew install --cask ${casks[*]}
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+# Run the command `brew tap` to see all taps in use
+# Running the following will list packages available from a tap
+#     brew tap-info vmware/tvs --json | jq -r '.[]|(.formula_names[],.cask_tokens[])'
+/opt/homebrew/bin/brew tap homebrew/cask-fonts
+/opt/homebrew/bin/brew tap showwin/speedtest
+/opt/homebrew/bin/brew install ${packages[*]}
+/opt/homebrew/bin/brew install --cask ${casks[*]}
 
 # TODO: use fetch to install things with releases but not available in homebrew
-# https://github.com/yarrow/zet/releases
+# https://github.com/aaronriekenberg/rust-parallel

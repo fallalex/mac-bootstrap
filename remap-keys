@@ -8,7 +8,7 @@ import os
 # https://stackoverflow.com/questions/54392510/how-to-assign-a-key-remapping-to-specific-device-using-hidutil
 
 system_profiler_utility = str(pathlib.PosixPath(__file__).with_name('system-profiler-utility'))
-KEYBOARD_ID = subprocess.check_output((system_profiler_utility, 'k')).decode('utf8').rstrip()
+KEYBOARD_LOCATION_ID = subprocess.check_output((system_profiler_utility, 'k')).decode('utf8').rstrip()
 
 SERVICE_NAME = "local.KeyRemapping"
 PLIST_NAME = f"{SERVICE_NAME}.plist"
@@ -18,20 +18,20 @@ UID = os.getuid()
 gui = f"gui/{UID}"
 gui_service = f"{gui}/{SERVICE_NAME}"
 
-matching_json = json.dumps({"ProductID": KEYBOARD_ID})
+matching_json = json.dumps({"LocationID": int(KEYBOARD_LOCATION_ID, 16)})
 
 set_json = json.dumps({"UserKeyMapping": [
   {  # caplocks to escape
-    "HIDKeyboardModifierMappingSrc": "0x700000039",
-    "HIDKeyboardModifierMappingDst": "0x700000029"
+    "HIDKeyboardModifierMappingSrc": 0x700000039,
+    "HIDKeyboardModifierMappingDst": 0x700000029
   },
   {  # right command to left control
-    "HIDKeyboardModifierMappingSrc": "0x7000000E7",
-    "HIDKeyboardModifierMappingDst": "0x7000000E0"
+    "HIDKeyboardModifierMappingSrc": 0x7000000E7,
+    "HIDKeyboardModifierMappingDst": 0x7000000E0
   },
   {  # escape to caplocks
-    "HIDKeyboardModifierMappingSrc": "0x700000029",
-    "HIDKeyboardModifierMappingDst": "0x700000039"
+    "HIDKeyboardModifierMappingSrc": 0x700000029,
+    "HIDKeyboardModifierMappingDst": 0x700000039
   }]}
 )
 
