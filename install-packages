@@ -82,6 +82,7 @@ packages=(
     hugo
     tokei
     ruff
+    scarvalhojr/tap/aoc-cli
 
 )
 
@@ -90,6 +91,7 @@ packages=(
 casks=(
     intellij-idea-ce
     font-fira-code
+    font-fira-code-nerd-font
     firefox
     google-chrome
     zoom
@@ -108,7 +110,6 @@ casks=(
 # Running the following will list packages available from a tap
 #     brew tap-info vmware/tvs --json | jq -r '.[]|(.formula_names[],.cask_tokens[])'
 /opt/homebrew/bin/brew tap homebrew/cask-fonts
-/opt/homebrew/bin/brew tap showwin/speedtest
 /opt/homebrew/bin/brew install ${packages[*]}
 /opt/homebrew/bin/brew install --cask ${casks[*]}
 
