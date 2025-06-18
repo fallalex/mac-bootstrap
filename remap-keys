@@ -6,6 +6,8 @@ import json
 import os
 # https://github.com/amarsyla/hidutil-key-remapping-generator
 # https://stackoverflow.com/questions/54392510/how-to-assign-a-key-remapping-to-specific-device-using-hidutil
+# I had some trouble mapping keys on newer version of macOS you might need to run from Terminal with input monitoring enabled
+# https://discussions.apple.com/thread/255794244?sortBy=rank
 
 system_profiler_utility = str(pathlib.PosixPath(__file__).with_name('system-profiler-utility'))
 KEYBOARD_LOCATION_ID = subprocess.check_output((system_profiler_utility, 'k')).decode('utf8').rstrip()
